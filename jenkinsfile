@@ -1,0 +1,97 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "your-docker-repo/app"
+        IMAGE_TAG  = "${env.BUILD_NUMBER}"
+        SONAR_HOST_URL = credentials('sonar-host-url')   // Jenkins Secret Text
+        SONAR_TOKEN    = credentials('sonar-token')      // Jenkins Secret Text
+    }
+    tools {
+        maven 'maven-3.9'   // Configure in Jenkins Global Tools
+    }
+
+    stages {
+
+        // -------------------------
+        // Build Stage
+        // -------------------------
+        stage('Build') {
+            steps {
+                echo "Building application..."
+                sh 'mvn clean compile'
+            }
+        }
+
+        // -------------------------
+        // Test Stage
+        // -------------------------
+        stage('Test') {
+            steps {
+                echo "Running tests..."
+                sh 'mvn test'
+            }
+        }
+
+        // -------------------------
+        // SonarQube Scan
+        // -------------------------
+        stage('SonarQube Scan') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withSonarQubeEnv('sonarqube-server') {
+                    sh """
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=my-project \
+                        -Dsonar.host.url=${SONAR_HOST_URL} \
+                        -Dsonar.login=${SONAR_TOKEN}
+                    """
+                }
+            }
+        }
+
+        // -------------------------
+        // Docker Build & Push
+        // -------------------------
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    docker.withRegistry('', 'docker-credentials-id') {
+                        def image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                        image.push()
+                    }
+                }
+            }
+        }
+
+        // -------------------------
+        // Deploy to Kubernetes
+        // -------------------------
+        stage('Deploy') {
+            when {
+                branch 'main'
+            }
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh """
+                        echo "Deploying to Kubernetes..."
+                        kubectl set image deployment/my-app \
+                        my-app=${IMAGE_NAME}:${IMAGE_TAG} \
+                        --namespace=default
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline completed successfully!"
+        }
+        failure {
+            echo "Pipeline failed!"
+        }
+    }
+}

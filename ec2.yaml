@@ -1,0 +1,28 @@
+
+variable "envirement" {
+type =  string 
+default = "dev"
+}
+
+locals {
+instance_type == var.envirement == "prod" ? "t2large"
+              == var.envirement == "qa" ? "t2small"
+                                        "t2.small"
+}
+
+resource "aws_instance" "prod_instance" {
+ami = ""
+
+
+apiVersion: v1 
+kind: ResourceQuota 
+metadata: 
+  name: dev-quota 
+  namespace: dev 
+  spec: 
+    hard: 
+     pods: "5"
+     requests.cpu: "2"
+     requests.memory: 4gi 
+     limits.cpu = "4"
+     limitsmemory: 8gi 

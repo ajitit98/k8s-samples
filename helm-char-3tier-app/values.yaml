@@ -1,0 +1,30 @@
+namespace: default
+
+image:
+  repository: my-repo/my-image
+  tag: latest
+
+replicaCount: 2
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  host: my-app.example.com
+
+aws:
+  region: us-east-1
+
+secrets:
+  name: db-secret
+
+mysql:
+  image: mysql:5.7
+  storage: 5Gi
+
+
+
+

@@ -1,0 +1,31 @@
+# Multistage Dockerfile for a Java application
+
+# ---- Build stage ----
+FROM maven:3.9.8-jdk-17 AS build
+WORKDIR /app
+
+# Copy only Maven files first for dependency caching
+COPY pom.xml .
+COPY settings.xml .
+
+# Download dependencies
+RUN mvn dependency:go-offline -B
+
+# Copy remaining source code
+COPY src ./src
+
+# Build the application and create a fat JAR
+RUN mvn clean package -DskipTests -B
+
+# ---- Runtime stage ----
+FROM openjdk:17-jdk-slim AS runtime
+WORKDIR /app
+
+# Copy built artifact from the build stage
+COPY --from=build /app/target/*.jar ./app.jar
+
+# Expose application port (adjust if needed)
+EXPOSE 8080
+
+# Default command to run the app
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

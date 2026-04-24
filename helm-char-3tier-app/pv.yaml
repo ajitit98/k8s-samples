@@ -1,0 +1,11 @@
+apiVersion: v1 
+kind: PersistanceVolume 
+metadata: 
+  name: {{ .values.pv.name }}  
+spec: 
+  capacity: 
+    storage: {{ .values.pv.size }} 
+  accessMode: 
+   - {{ .values.pv.accessMode }}  
+  hostPath: 
+    path: {{ .values.pv.hostPath }} 

@@ -1,0 +1,11 @@
+
+apiVersion: v1
+kind: PersistanceVolumeClaim
+metadata: 
+  namme: {{ .values.pv.mysql-pv }} 
+spec: 
+  accessMode: 
+    - {{ .values.pv.accessMode }} 
+  resource: 
+    request: 
+      storage: {{ .values.pv.size }} 

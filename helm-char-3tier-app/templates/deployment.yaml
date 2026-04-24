@@ -1,0 +1,26 @@
+aviVersion: apps/v1 
+kind: Depoyment 
+metadata: 
+  name: {{.values.app.name }}
+  namespace: {{ .values.namespace }}
+spec: 
+  replicas: 2 
+  selector: 
+    matchLabels: 
+      app: {{ .values.app.name }} 
+  template: 
+    metadata: 
+      labels: 
+        app:{{ .values.app.name }} 
+    spec: 
+      containers: 
+        - name: {{ .values.app.name }} 
+          image: {{ .values.app.image }}
+          ports: 
+            - containerPort: {{ .values.app.containerPort }}
+          env: 
+            - name: DB_USERNAME 
+              valueFrom: 
+                keyRef: 
+                name: db-secret 
+                key: username      

@@ -1,0 +1,75 @@
+stages:
+  - build
+  - test
+  - scan
+  - package
+  - deploy
+
+variables:
+  IMAGE_NAME: "$CI_REGISTRY_IMAGE/app"
+  IMAGE_TAG: "$CI_COMMIT_SHORT_SHA"
+
+# -------------------------
+# Build Stage
+# -------------------------
+build-job:
+  stage: build
+  image: maven:3.9.9-eclipse-temurin-17
+  script:
+    - echo "Building application..."
+    - mvn clean compile
+  artifacts:
+    paths:
+      - target/
+
+# -------------------------
+# Test Stage
+# -------------------------
+test-job:
+  stage: test
+  image: maven:3.9.9-eclipse-temurin-17
+  script:
+    - echo "Running tests..."
+    - mvn test
+
+# -------------------------
+# Code Quality Scan (SonarQube)
+# -------------------------
+sonarqube:
+  stage: scan
+  image: maven:3.9.9-eclipse-temurin-17
+  script:
+    - mvn sonar:sonar \
+        -Dsonar.projectKey=my-project \
+        -Dsonar.host.url=$SONAR_HOST_URL \
+        -Dsonar.login=$SONAR_TOKEN
+  only:
+    - main
+
+# -------------------------
+# Docker Build & Push
+# -------------------------
+docker-build:
+  stage: package
+  image: docker:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+# -------------------------
+# Deploy (Kubernetes Example)
+# -------------------------
+deploy-prod:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - echo "Deploying to Kubernetes..."
+    - kubectl set image deployment/my-app my-app=$IMAGE_NAME:$IMAGE_TAG --namespace=default
+  environment:
+    name: production
+  only:
+    - main

@@ -1,0 +1,13 @@
+apiVersion: v1 
+kind: Service
+metadata: 
+  name: {{ .values.service.name }} 
+  nameSpace: {{ .values.namespaces }} 
+spec: 
+  selector: 
+    app: {{ .values.app.name }} 
+  ports: 
+    - protical: TCP 
+      port: {{ .values.service.port }} 
+      targetPort: {{ .values.app.containerPort }}
+      type: {{ .values.servcie.type }} 

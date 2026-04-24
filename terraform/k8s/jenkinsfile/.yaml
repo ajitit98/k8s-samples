@@ -1,0 +1,42 @@
+pipeline {
+   agent any 
+environment {
+  IMAGE_NAME= "my-repo/my-image"
+  IMAGE_TAG= "$(ENV.build_number)" 
+  SONAR_HOST_URL= credential('sonar-host-url') 
+  SONAR_TOKEN= credential('sonar-token) 
+  } 
+
+  tools {
+    maven 'maven:3.9' 
+    } 
+
+ stages { 
+   stage('build') {
+    steps {
+      sh 'mvn clean package' 
+  } 
+  } 
+  stage('test') {
+    steps { 
+     sh 'mvn test' 
+     } 
+     } 
+  stage('sonarqube') {
+    steps { 
+       withSonarQubeENV('sonar') {
+         sh 'mvn sonar:sonar -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN' 
+         } 
+         } 
+         }
+  stage('docker build and push') {
+  steps{
+    script {
+     dockerWithRegistry('https://index.docker.io/v1/', 'dockerhub-credentials') {
+       def app = docker.build("$IMAGE_NAME:$IMAGE_TAG") 
+       app.push() 
+       } 
+       } 
+       } 
+       } 
+       }
