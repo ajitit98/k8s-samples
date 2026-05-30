@@ -1,0 +1,21 @@
+apiVersion: rbac.authgerization.k8s.io/v1 
+kind: Rbac 
+metadata: 
+  name: developer-prod 
+rules: 
+  - apiGroup: [""] 
+    resource: ["pods"]
+    verbs: ["create" , "get" , "delete", "watch"]
+
+
+
+
+
+apiVersion: rbac.autherization.k8s.io/v1 
+kind: Role 
+metadata: 
+  name: developer-group 
+rules: 
+  - apiGroup: [""]
+     resource: ["pods"]
+     verbs: ["create" , "get", "delete" , "watch"]  
